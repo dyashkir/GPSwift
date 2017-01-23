@@ -25,7 +25,7 @@ class TreeNode<T> {
 
 extension TreeNode: CustomStringConvertible {
     public var description: String {
-        var s = "\(value)"
+        var s = "\(value) "
         if !children.isEmpty {
             s += " {" + children.map { $0.description }.joined(separator: ", ") + "}"
         }

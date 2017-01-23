@@ -15,25 +15,38 @@ enum NodeType{
 }
 
 typealias ProgramTreeNode = TreeNode<NodeFunction>
-
+typealias GPFunction = (function : (Double, Double)->Double, name: String)
+class Leaf {
+    var value : Double = 0.0
+}
 struct IndividualProgram {
     let prg : ProgramTreeNode
     var score : Double = 0.0
 }
 struct NodeFunction{
     var type : NodeType
-    var f1 : ((Double)->Double)?
-    var f2 : ((Double, Double)->Double)?
-    var leaf :(()->Double)?
+    var f : GPFunction?
+    var leaf : Leaf?
+    var name : String?
     init(type : NodeType) {
         self.type = type
     }
+    
+}
+extension NodeFunction: CustomStringConvertible {
+     
+    var description: String {
+        if(type == .leaf){
+           return "leaf"
+        }else{
+            return (self.f!.name)
+        }
+    }
 }
 
-
 struct GPRun {
-    let functionArray: [(Double, Double)->Double]
-    let leafs: [()->Double]
+    let functionArray: [(function: (Double, Double)->Double, name: String)]
+    let leafs: [Leaf]
     
     let fitness : (ProgramTreeNode)->Double
 
@@ -53,7 +66,7 @@ struct GPRun {
         let f2 = makeProgram(depth: depth-1)
         
         let i = Int( (arc4random_uniform(UInt32(functionArray.count))))
-        rootFunc.f2 = functionArray[i]
+        rootFunc.f = functionArray[i]
         
         let root = TreeNode<NodeFunction>(value: rootFunc)
         root.add(f1)
@@ -63,16 +76,16 @@ struct GPRun {
     
     func evalProgram(root : ProgramTreeNode)->Double{
         if root.value.type == .leaf {
-            return root.value.leaf!()
+            return root.value.leaf!.value
         }else if root.value.type == .oneVal{
             let v1 = evalProgram(root: root.children[0])
             
-            return root.value.f1!(v1)
+            return root.value.f!.function(v1, v1)
         }else{
             let v1 = evalProgram(root: root.children[0])
             let v2 = evalProgram(root: root.children[1])
             
-            return root.value.f2!(v1, v2)
+            return root.value.f!.function(v1, v2)
         }
     }
     
