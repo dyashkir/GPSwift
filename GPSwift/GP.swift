@@ -98,4 +98,10 @@ struct GPRun {
         return gen
     }
     
+    func mutate(prg: IndividualProgram) -> IndividualProgram{
+        let decision = Int( (arc4random_uniform(UInt32(2))))
+        let i = Int( (arc4random_uniform(UInt32(functionArray.count))))
+        prg.prg.children[decision].value.f = functionArray[i]
+        return prg
+    }
 }
