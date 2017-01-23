@@ -49,6 +49,7 @@ struct GPRun {
     let leafs: [Leaf]
     
     let fitness : (ProgramTreeNode)->Double
+    let initialTreeDepth : Int
 
 
     func makeProgram(depth: Int)-> TreeNode<NodeFunction>{
@@ -92,7 +93,7 @@ struct GPRun {
     func buildGeneration(size: Int)->[IndividualProgram]{
         var gen = [IndividualProgram]()
         for _ in 0..<size{
-            let p = IndividualProgram(prg: makeProgram(depth: 4), score: 1000.0)
+            let p = IndividualProgram(prg: makeProgram(depth: self.initialTreeDepth), score: 1000.0)
             gen.append(p)
         }
         return gen

@@ -33,7 +33,7 @@ func fitnessX2(train:TrainTuple, program: ProgramTreeNode) ->Double{
     let result = run.evalProgram(root: program)
     return abs(train.y-result)
 }
-let run = GPRun(functionArray: functionArray, leafs: leafs, fitness: fitness)
+let run = GPRun(functionArray: functionArray, leafs: leafs, fitness: fitness, initialTreeDepth: 4)
 
 var generation = run.buildGeneration(size: 1000)
 
