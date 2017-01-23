@@ -100,9 +100,14 @@ struct GPRun {
     }
     
     func mutate(prg: IndividualProgram) -> IndividualProgram{
-        let decision = Int( (arc4random_uniform(UInt32(2))))
+        let level = Int( (arc4random_uniform(UInt32(self.initialTreeDepth-1))))
+        var next = prg.prg
+        for _ in 0..<level{
+            let decision = Int( (arc4random_uniform(UInt32(2))))
+            next = next.children[decision]
+        }
         let i = Int( (arc4random_uniform(UInt32(functionArray.count))))
-        prg.prg.children[decision].value.f = functionArray[i]
+        next.value.f = functionArray[i]
         return prg
     }
 }
