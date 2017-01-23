@@ -1,5 +1,5 @@
 # GPSwift
-*genetic programming in SWIFT*
+*genetic programming in Swift*
 
 Basic Genetic Programming using Swift programming language, work in progress. Suggestions, ideas, PRs are welcome
 
