@@ -56,7 +56,7 @@ struct GPRun {
     
     let initialTreeDepth : Int
     let numberOfGenerations : Int
-    let generationSize : Int = 100
+    let generationSize : Int = 1000
     
     var currentGeneration : ([IndividualProgram])?
 
@@ -148,11 +148,16 @@ struct GPRun {
             let nextGeneration = currentGeneration[0..<self.generationSize/2] + mutated
             
             currentGeneration = Array(nextGeneration)
-            currentGeneration.sort(by: {a,b in
-                return a.score<b.score
-            })
+            
+            
         }
         
+        for i in 0..<currentGeneration.count {
+            currentGeneration[i].score = trainer.fitness(forProgram: currentGeneration[i].prg, eval: self.evalProgram, leafs: leafs)
+        }
+        currentGeneration.sort(by: {a,b in
+                return a.score<b.score
+        })
         self.currentGeneration = currentGeneration
         
     }
