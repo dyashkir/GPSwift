@@ -57,6 +57,7 @@ struct GPRun {
     let initialTreeDepth : Int
     let numberOfGenerations : Int
     let generationSize : Int = 1000
+    let mutationRate = 0.2
     
     var currentGeneration : ([IndividualProgram])?
 
@@ -129,6 +130,9 @@ struct GPRun {
             fatalError()
         }
         
+        let mutatedNumber = Int(Double(generationSize)*mutationRate)
+        
+        
         for _ in 0..<self.numberOfGenerations {
             for i in 0..<currentGeneration.count {
                 currentGeneration[i].score = trainer.fitness(forProgram: currentGeneration[i].prg, eval: self.evalProgram, leafs: leafs)
@@ -138,16 +142,17 @@ struct GPRun {
                 return a.score<b.score
             })
             
-            var mutated = currentGeneration[0..<generationSize/2]
             
-            for i in 0..<generationSize/2{
-                let prg = self.mutate(prg: mutated[i])
-                mutated[i] = prg
+            //var mutated = currentGeneration[0..<generationSize/2]
+            
+            for i in 0..<mutatedNumber{
+                let prgToMutate = Int( (arc4random_uniform(UInt32(generationSize))))
+                currentGeneration[prgToMutate] = self.mutate(prg: currentGeneration[prgToMutate])
             }
             
-            let nextGeneration = currentGeneration[0..<self.generationSize/2] + mutated
+            //let nextGeneration = currentGeneration[0..<self.generationSize/2] + mutated
             
-            currentGeneration = Array(nextGeneration)
+            //currentGeneration = Array(nextGeneration)
             
             
         }
