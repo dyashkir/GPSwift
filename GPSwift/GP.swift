@@ -44,14 +44,36 @@ extension NodeFunction: CustomStringConvertible {
     }
 }
 
+protocol GPTrainer{
+    func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode)->Double, leafs: [Leaf]) ->Double
+}
+
 struct GPRun {
-    let functionArray: [(function: (Double, Double)->Double, name: String)]
-    let leafs: [Leaf]
     
-    let fitness : (ProgramTreeNode)->Double
+    let functionArray : [(function: (Double, Double)->Double, name: String)]
+    let leafs: [Leaf]
+    let trainer : GPTrainer
+    
     let initialTreeDepth : Int
+    let numberOfGenerations : Int
+    let generationSize : Int = 100
+    
+    var currentGeneration : ([IndividualProgram])?
 
 
+    init(functions: [(function: (Double, Double)->Double, name: String)],
+         leafs: [Leaf],
+         trainer: GPTrainer,
+         initialDepth : Int,
+         numberOfGenerations : Int) {
+        
+        self.functionArray = functions
+        self.leafs = leafs
+        self.trainer = trainer
+        self.initialTreeDepth = initialDepth
+        self.numberOfGenerations = numberOfGenerations
+    }
+    
     func makeProgram(depth: Int)-> TreeNode<NodeFunction>{
         if(depth == 1){
             var body = NodeFunction(type: .leaf)
@@ -97,6 +119,42 @@ struct GPRun {
             gen.append(p)
         }
         return gen
+    }
+    
+    mutating func start(){
+        
+        self.currentGeneration = run.buildGeneration(size: self.generationSize)
+        
+        guard var currentGeneration = self.currentGeneration else{
+            fatalError()
+        }
+        
+        for _ in 0..<self.numberOfGenerations {
+            for i in 0..<currentGeneration.count {
+                currentGeneration[i].score = trainer.fitness(forProgram: currentGeneration[i].prg, eval: self.evalProgram, leafs: leafs)
+            }
+            
+            currentGeneration.sort(by: {a,b in
+                return a.score<b.score
+            })
+            
+            var mutated = currentGeneration[0..<generationSize/2]
+            
+            for i in 0..<generationSize/2{
+                let prg = self.mutate(prg: mutated[i])
+                mutated[i] = prg
+            }
+            
+            let nextGeneration = currentGeneration[0..<self.generationSize/2] + mutated
+            
+            currentGeneration = Array(nextGeneration)
+            currentGeneration.sort(by: {a,b in
+                return a.score<b.score
+            })
+        }
+        
+        self.currentGeneration = currentGeneration
+        
     }
     
     func mutate(prg: IndividualProgram) -> IndividualProgram{
