@@ -12,18 +12,6 @@ Clone the repo ;)
 ### Fit the `X^2`
 
 ```swift
-//
-//  main.swift
-//  GPSwift
-//
-//  Created by Dmytro Yashkir on 2017-01-22.
-//  Copyright © 2017 Dmytro Yashkir. All rights reserved.
-//
-
-import Foundation
-
-
-
 var functionArray = [GPFunction]()
 
 functionArray.append((+, "+"))
