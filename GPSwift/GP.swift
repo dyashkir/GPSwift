@@ -12,6 +12,7 @@ enum NodeType{
     case twoVal
     case oneVal
     case leaf
+    case constant
 }
 
 typealias ProgramTreeNode = TreeNode<NodeFunction>
@@ -27,6 +28,7 @@ struct NodeFunction{
     var type : NodeType
     var f : GPFunction?
     var leaf : Leaf?
+    var constant : Double?
     var name : String?
     init(type : NodeType) {
         self.type = type
@@ -38,6 +40,8 @@ extension NodeFunction: CustomStringConvertible {
     var description: String {
         if(type == .leaf){
            return "leaf"
+        }else if (type == .constant){
+            return "constant"
         }else{
             return (self.f!.name)
         }
@@ -77,11 +81,19 @@ struct GPRun {
     
     func makeProgram(depth: Int)-> TreeNode<NodeFunction>{
         if(depth == 1){
-            var body = NodeFunction(type: .leaf)
-            let i = Int( (arc4random_uniform(UInt32(leafs.count))))
-            body.leaf = leafs[i]
-            let t = TreeNode<NodeFunction>(value: body)
-            return t
+            if (Int(arc4random_uniform(UInt32(2))) == 0){
+                var body = NodeFunction(type: .constant)
+                body.constant = Double((arc4random_uniform(UInt32(100))))/100.0
+                let t = TreeNode<NodeFunction>(value: body)
+                return t
+            }else{
+                var body = NodeFunction(type: .leaf)
+                let i = Int( (arc4random_uniform(UInt32(leafs.count))))
+                body.leaf = leafs[i]
+                let t = TreeNode<NodeFunction>(value: body)
+                return t    
+            }
+            
         }
         
         var rootFunc = NodeFunction(type: .twoVal)
@@ -105,6 +117,8 @@ struct GPRun {
             let v1 = evalProgram(root: root.children[0])
             
             return root.value.f!.function(v1, v1)
+        }else if root.value.type == .constant {
+            return root.value.constant!
         }else{
             let v1 = evalProgram(root: root.children[0])
             let v2 = evalProgram(root: root.children[1])
@@ -145,7 +159,7 @@ struct GPRun {
             
             //var mutated = currentGeneration[0..<generationSize/2]
             
-            for i in 0..<mutatedNumber{
+            for _ in 0..<mutatedNumber{
                 let prgToMutate = Int( (arc4random_uniform(UInt32(generationSize))))
                 currentGeneration[prgToMutate] = self.mutate(prg: currentGeneration[prgToMutate])
             }
