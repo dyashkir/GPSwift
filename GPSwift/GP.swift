@@ -41,7 +41,7 @@ extension NodeFunction: CustomStringConvertible {
         if(type == .leaf){
            return "leaf"
         }else if (type == .constant){
-            return "constant"
+            return "\(self.constant!)"
         }else{
             return (self.f!.name)
         }

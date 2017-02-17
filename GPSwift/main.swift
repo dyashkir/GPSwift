@@ -60,7 +60,6 @@ var run = GPRun(functions: functionArray, leafs: leafs, trainer: sq, initialDept
 run.start()
 
 let maxPrg = run.currentGeneration?[0]
-let maxPrg1 = run.currentGeneration?[100]
 
 print("Best is:")
 
@@ -71,9 +70,3 @@ sq.train.forEach {a in
     print("x: \(a.0) result: \(res)")
 }
 
-print(String(describing: maxPrg1))
-sq.train.forEach {a in
-    leafs[0].value = a.0
-    let res = run.evalProgram(root: (maxPrg1?.prg)!)
-    print("x: \(a.0) result: \(res)")
-}
