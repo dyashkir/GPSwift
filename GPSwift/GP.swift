@@ -23,6 +23,10 @@ class Leaf {
 struct IndividualProgram {
     let prg : ProgramTreeNode
     var score : Double = 0.0
+    
+    func replicate() -> IndividualProgram{
+        return self
+    }
 }
 struct NodeFunction{
     var type : NodeType
@@ -192,7 +196,7 @@ struct GPRun {
     
     func mutate(prg: IndividualProgram) -> IndividualProgram{
         let level = Int( (arc4random_uniform(UInt32(self.initialTreeDepth-2))))
-        var next = prg.prg
+        var next = prg.prg.replica()
         let top = next
         for _ in 0..<level{
             let decision = Int( (arc4random_uniform(UInt32(2))))
@@ -207,8 +211,8 @@ struct GPRun {
     
     func crossover(parents: (IndividualProgram, IndividualProgram)) -> IndividualProgram{
         let level = Int( (arc4random_uniform(UInt32(self.initialTreeDepth-2))))
-        var next1 = parents.0.prg
-        var next2 = parents.1.prg
+        var next1 = parents.0.prg.replica()
+        var next2 = parents.1.prg.replica()
         let top = next1
         
         for _ in 0..<level{

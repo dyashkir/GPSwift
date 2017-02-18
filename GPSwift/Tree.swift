@@ -21,6 +21,15 @@ class TreeNode<T> {
         children.append(node)
         node.parent = self
     }
+    
+    public func replica() ->TreeNode<T> {
+        let n = TreeNode<T>(value: self.value)
+        let newChildren = self.children.map( { a in
+            return a.replica()
+            })
+        n.children = newChildren
+        return n
+    }
 }
 
 extension TreeNode: CustomStringConvertible {
