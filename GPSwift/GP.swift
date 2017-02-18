@@ -61,7 +61,8 @@ struct GPRun {
     let initialTreeDepth : Int
     let numberOfGenerations : Int
     let generationSize : Int = 1000
-    let mutationRate = 0.2
+    let mutationRate = 0.1
+    let crossoverRate = 0.6
     
     var currentGeneration : ([IndividualProgram])?
 
@@ -145,6 +146,7 @@ struct GPRun {
         }
         
         let mutatedNumber = Int(Double(generationSize)*mutationRate)
+        let crossoverNumber = Int(Double(generationSize)*crossoverRate)
         
         for _ in 0..<self.numberOfGenerations {
             for i in 0..<currentGeneration.count {
@@ -156,7 +158,6 @@ struct GPRun {
             })
             
             var newGeneration = ([IndividualProgram])()
-            
             for _ in 0..<mutatedNumber{
                 let prgToMutate = Int((arc4random_uniform(UInt32(generationSize/2))))
                 newGeneration.append(self.mutate(prg: currentGeneration[prgToMutate]))
