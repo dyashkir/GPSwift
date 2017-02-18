@@ -60,7 +60,7 @@ struct GPRun {
     
     let initialTreeDepth : Int
     let numberOfGenerations : Int
-    let generationSize : Int = 1000
+    let generationSize : Int = 10
     let mutationRate = 0.1
     let crossoverRate = 0.6
     
@@ -156,18 +156,27 @@ struct GPRun {
             currentGeneration.sort(by: {a,b in
                 return a.score<b.score
             })
+            print("Current gen best score: \(currentGeneration[0].score) worst: \(currentGeneration[currentGeneration.count-1].score)")
             
             var newGeneration = ([IndividualProgram])()
+            let filler = currentGeneration.prefix(upTo: currentGeneration.count-mutatedNumber-crossoverNumber)
+            newGeneration.append(contentsOf: filler)
             for _ in 0..<mutatedNumber{
                 let prgToMutate = Int((arc4random_uniform(UInt32(generationSize/2))))
                 newGeneration.append(self.mutate(prg: currentGeneration[prgToMutate]))
             }
             
-            //copy best to fill up
-            let filler = currentGeneration.prefix(upTo: currentGeneration.count-newGeneration.count)
-            newGeneration.append(contentsOf: filler)
+            for i in 0..<crossoverNumber{
+                let parent1 = currentGeneration[i]
+                var p2 = Int((arc4random_uniform(UInt32(generationSize/2))))
+                while p2 == i{
+                    p2 = Int((arc4random_uniform(UInt32(generationSize/2))))
+                }
+                let parent2 = currentGeneration[p2]
+                newGeneration.append(self.crossover(parents: (parent1, parent2)))
+            }
             
-            self.currentGeneration = newGeneration
+            currentGeneration = newGeneration
             
         }
         
@@ -182,14 +191,39 @@ struct GPRun {
     }
     
     func mutate(prg: IndividualProgram) -> IndividualProgram{
-        let level = Int( (arc4random_uniform(UInt32(self.initialTreeDepth-1))))
+        let level = Int( (arc4random_uniform(UInt32(self.initialTreeDepth-2))))
         var next = prg.prg
+        let top = next
         for _ in 0..<level{
             let decision = Int( (arc4random_uniform(UInt32(2))))
             next = next.children[decision]
         }
         let i = Int( (arc4random_uniform(UInt32(functionArray.count))))
         next.value.f = functionArray[i]
-        return prg
+        
+        let newProgram = IndividualProgram(prg: top, score:0.0)
+        return newProgram
+    }
+    
+    func crossover(parents: (IndividualProgram, IndividualProgram)) -> IndividualProgram{
+        let level = Int( (arc4random_uniform(UInt32(self.initialTreeDepth-2))))
+        var next1 = parents.0.prg
+        var next2 = parents.1.prg
+        let top = next1
+        
+        for _ in 0..<level{
+            let decision = Int( (arc4random_uniform(UInt32(2))))
+            next1 = next1.children[decision]
+        }
+        
+        for _ in 0..<level{
+            let decision = Int( (arc4random_uniform(UInt32(2))))
+            next2 = next2.children[decision]
+        }
+        
+        next1.children = next2.children
+        
+        let newProgram = IndividualProgram(prg: top, score:0.0)
+        return newProgram
     }
 }

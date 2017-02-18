@@ -33,7 +33,9 @@ struct SquareTrainer : GPTrainer{
             let result = eval(forProgram)
             let error = (t.1-result)
             score += pow(error/t.1, 2.0)
+            
         })
+        
         return score
     }
 }
@@ -56,7 +58,7 @@ struct CubeTrainer : GPTrainer{
 let sq = SquareTrainer()
 let ct = CubeTrainer()
 
-var run = GPRun(functions: functionArray, leafs: leafs, trainer: sq, initialDepth: 4, numberOfGenerations: 30)
+var run = GPRun(functions: functionArray, leafs: leafs, trainer: sq, initialDepth: 4, numberOfGenerations: 10)
 run.start()
 
 let maxPrg = run.currentGeneration?[0]
