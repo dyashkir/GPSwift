@@ -146,7 +146,6 @@ struct GPRun {
         
         let mutatedNumber = Int(Double(generationSize)*mutationRate)
         
-        
         for _ in 0..<self.numberOfGenerations {
             for i in 0..<currentGeneration.count {
                 currentGeneration[i].score = trainer.fitness(forProgram: currentGeneration[i].prg, eval: self.evalProgram, leafs: leafs)
@@ -156,18 +155,18 @@ struct GPRun {
                 return a.score<b.score
             })
             
-            
-            //var mutated = currentGeneration[0..<generationSize/2]
+            var newGeneration = ([IndividualProgram])()
             
             for _ in 0..<mutatedNumber{
-                let prgToMutate = Int( (arc4random_uniform(UInt32(generationSize))))
-                currentGeneration[prgToMutate] = self.mutate(prg: currentGeneration[prgToMutate])
+                let prgToMutate = Int((arc4random_uniform(UInt32(generationSize/2))))
+                newGeneration.append(self.mutate(prg: currentGeneration[prgToMutate]))
             }
             
-            //let nextGeneration = currentGeneration[0..<self.generationSize/2] + mutated
+            //copy best to fill up
+            let filler = currentGeneration.prefix(upTo: currentGeneration.count-newGeneration.count)
+            newGeneration.append(contentsOf: filler)
             
-            //currentGeneration = Array(nextGeneration)
-            
+            self.currentGeneration = newGeneration
             
         }
         
