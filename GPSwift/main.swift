@@ -63,7 +63,7 @@ run.start()
 
 let maxPrg = run.currentGeneration?[0]
 
-print("Best is:")
+print("Best for square is:")
 
 print(String(describing: maxPrg))
 sq.train.forEach {a in
@@ -72,3 +72,16 @@ sq.train.forEach {a in
     print("x: \(a.0) result: \(res)")
 }
 
+var runCube = GPRun(functions: functionArray, leafs: leafs, trainer: ct, initialDepth: 4, numberOfGenerations: 10)
+runCube.start()
+
+let maxPrgCt = runCube.currentGeneration?[0]
+
+print("Best for Cube is:")
+
+print(String(describing: maxPrgCt))
+ct.train.forEach {a in
+    leafs[0].value = a.0
+    let res = runCube.evalProgram(root: (maxPrgCt?.prg)!)
+    print("x: \(a.0) result: \(res) expected: \(a.1)")
+}
