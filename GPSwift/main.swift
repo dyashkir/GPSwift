@@ -8,7 +8,19 @@
 
 import Foundation
 
+//data
 
+func readFile() -> String {
+    
+    let path = "/Users/dyashkir/ios/GPSwift/mnist_train_100.csv"
+    do {
+        
+        let text = try String(contentsOfFile: path)
+        return text
+    }catch{
+        fatalError()
+    }
+}
 
 var functionArray = [GPFunction]()
 
@@ -54,6 +66,8 @@ struct CubeTrainer : GPTrainer{
         return score
     }
 }
+
+NSLog(readFile())
 
 let sq = SquareTrainer()
 let ct = CubeTrainer()
