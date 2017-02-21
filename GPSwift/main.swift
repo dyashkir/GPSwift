@@ -77,13 +77,13 @@ run.start()
 
 let maxPrg = run.currentGeneration?[0]
 
-print("Best for square is:")
+NSLog("Best for square is:")
 
-print(String(describing: maxPrg))
+NSLog(String(describing: maxPrg))
 sq.train.forEach {a in
     leafs[0].value = a.0
     let res = run.evalProgram(root: (maxPrg?.prg)!)
-    print("x: \(a.0) result: \(res)")
+    NSLog("x: \(a.0) result: \(res)")
 }
 
 var runCube = GPRun(functions: functionArray, leafs: leafs, trainer: ct, initialDepth: 4, numberOfGenerations: 10)
@@ -91,11 +91,11 @@ runCube.start()
 
 let maxPrgCt = runCube.currentGeneration?[0]
 
-print("Best for Cube is:")
+NSLog("Best for Cube is:")
 
-print(String(describing: maxPrgCt))
+NSLog(String(describing: maxPrgCt))
 ct.train.forEach {a in
     leafs[0].value = a.0
     let res = runCube.evalProgram(root: (maxPrgCt?.prg)!)
-    print("x: \(a.0) result: \(res) expected: \(a.1)")
+    NSLog("x: \(a.0) result: \(res) expected: \(a.1)")
 }

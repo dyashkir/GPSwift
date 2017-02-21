@@ -160,7 +160,7 @@ struct GPRun {
             currentGeneration.sort(by: {a,b in
                 return a.score<b.score
             })
-            print("Current gen best score: \(currentGeneration[0].score) worst: \(currentGeneration[currentGeneration.count-1].score)")
+            NSLog("Current gen best score: \(currentGeneration[0].score) worst: \(currentGeneration[currentGeneration.count-1].score)")
             
             var newGeneration = ([IndividualProgram])()
             let filler = currentGeneration.prefix(upTo: currentGeneration.count-mutatedNumber-crossoverNumber)
