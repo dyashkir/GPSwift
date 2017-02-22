@@ -143,7 +143,7 @@ struct GPRun {
     
     mutating func start(){
         
-        self.currentGeneration = run.buildGeneration(size: self.generationSize)
+        self.currentGeneration = self.buildGeneration(size: self.generationSize)
         
         guard var currentGeneration = self.currentGeneration else{
             fatalError()
