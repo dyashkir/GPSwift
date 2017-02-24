@@ -64,9 +64,9 @@ struct GPRun {
     
     let initialTreeDepth : Int
     let numberOfGenerations : Int
-    let generationSize : Int = 500
+    let generationSize : Int = 1000
     let mutationRate = 0.05
-    let crossoverRate = 0.9
+    let crossoverRate = 0.94
     
     var currentGeneration : ([IndividualProgram])?
 

@@ -26,6 +26,14 @@ var functionArray = [GPFunction]()
 functionArray.append((+, "+"))
 functionArray.append((-, "-"))
 functionArray.append((*,"*"))
+func division(a:Double, b:Double) ->Double {
+    if b != 0.0 {
+        return a/b
+    }else{
+        return a
+    }
+}
+functionArray.append((division, "/"))
 //functionArray.append((min, "min"))
 //functionArray.append((max, "max"))
 
@@ -110,7 +118,7 @@ nt.train = lines.map(CSVNumbersDataParseLine)
 
 
 
-var run = GPRun(functions: functionArray, leafs: leafs, trainer: nt, initialDepth: 6, numberOfGenerations: 10)
+var run = GPRun(functions: functionArray, leafs: leafs, trainer: nt, initialDepth: 8, numberOfGenerations: 100)
 run.start()
 
 let best = run.currentGeneration?[0]
