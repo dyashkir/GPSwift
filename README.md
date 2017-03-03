@@ -51,3 +51,6 @@ print(String(describing: maxPrg))
 ```
 
 ### Handwriting number recognition
+
+http://yann.lecun.com/exdb/mnist/
+http://pjreddie.com/projects/mnist­in­csv/
