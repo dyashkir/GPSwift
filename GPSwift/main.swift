@@ -118,7 +118,7 @@ nt.train = lines.map(CSVNumbersDataParseLine)
 
 
 
-var run = GPRun(functions: functionArray, leafs: leafs, trainer: nt, initialDepth: 8, numberOfGenerations: 100)
+var run = GPRun(functions: functionArray, leafs: leafs, trainer: nt, initialDepth: 8, numberOfGenerations: 10, tournamentSize : 10)
 run.start()
 
 let best = run.currentGeneration?[0]

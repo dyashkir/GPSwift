@@ -64,9 +64,10 @@ struct GPRun {
     
     let initialTreeDepth : Int
     let numberOfGenerations : Int
-    let generationSize : Int = 1000
+    let generationSize : Int = 300
     let mutationRate = 0.05
     let crossoverRate = 0.94
+    let tournamentSize : Int
     
     var currentGeneration : ([IndividualProgram])?
 
@@ -75,13 +76,15 @@ struct GPRun {
          leafs: [Leaf],
          trainer: GPTrainer,
          initialDepth : Int,
-         numberOfGenerations : Int) {
+         numberOfGenerations : Int,
+         tournamentSize : Int) {
         
         self.functionArray = functions
         self.leafs = leafs
         self.trainer = trainer
         self.initialTreeDepth = initialDepth
         self.numberOfGenerations = numberOfGenerations
+        self.tournamentSize = tournamentSize
     }
     
     func makeProgram(depth: Int)-> TreeNode<NodeFunction>{
@@ -171,10 +174,10 @@ struct GPRun {
             }
             
             for i in 0..<crossoverNumber{
-                let parent1 = currentGeneration[i]
+                let parent1 = currentGeneration[self.tournamentSelection()]
                 var p2 = Int((arc4random_uniform(UInt32(generationSize/2))))
                 while p2 == i{
-                    p2 = Int((arc4random_uniform(UInt32(generationSize/2))))
+                    p2 = tournamentSelection()
                 }
                 let parent2 = currentGeneration[p2]
                 newGeneration.append(self.crossover(parents: (parent1, parent2)))
@@ -192,6 +195,21 @@ struct GPRun {
         })
         self.currentGeneration = currentGeneration
         
+    }
+    
+    func tournamentSelection()->Int{
+        var winner : Int?
+        for _ in 0..<tournamentSize {
+            let cur = Int((arc4random_uniform(UInt32(generationSize-1))))
+            if let w = winner {
+                if currentGeneration![cur].score < currentGeneration![w].score {
+                    winner = cur
+                }
+            }else{
+                winner = cur
+            }
+        }
+        return winner!
     }
     
     func mutate(prg: IndividualProgram) -> IndividualProgram{
