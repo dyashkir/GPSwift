@@ -39,40 +39,6 @@ functionArray.append((division, "/"))
 
 var leafs = [Leaf]()
 
-
-struct SquareTrainer : GPTrainer{
-    
-    let train = [(1.0, 1.0), (2.0, 4.0), (3.0, 9.0), (10.0, 100.0)]
-    
-    func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode) -> Double, leafs: [Leaf]) -> Double {
-        var score = 0.0
-        train.forEach({ t in
-            leafs[0].value = t.0
-            let result = eval(forProgram)
-            let error = (t.1-result)
-            score += pow(error/t.1, 2.0)
-            
-        })
-        
-        return score
-    }
-}
-struct CubeTrainer : GPTrainer{
-    
-    let train = [(1.0, 1.0), (2.0, 8.0), (3.0, 27.0), (10.0, 1000.0)]
-    
-    func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode) -> Double, leafs: [Leaf]) -> Double {
-        var score = 0.0
-        train.forEach({ t in
-            leafs[0].value = t.0
-            let result = eval(forProgram)
-            let error = (t.1-result)
-            score += pow(error/t.1, 2.0)
-        })
-        return score
-    }
-}
-
 let trainingCSV = readFile(path: "/Users/dyashkir/ios/GPSwift/mnist_train_100.csv")
 
 var lines = trainingCSV.components(separatedBy: "\n").map( { a in
@@ -87,7 +53,9 @@ for i in 0..<lines[0].count-1 {
 
 struct NumbersTrainer : GPTrainer {
    
-    var train = [(Int, [Double])]()
+    var train : [(Int, [Double])]
+    
+    let targetNumber : Int
     
     func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode) -> Double, leafs: [Leaf]) -> Double {
        var score = 0.0
@@ -98,14 +66,23 @@ struct NumbersTrainer : GPTrainer {
             }
             
             let result = eval(forProgram)
-            let error = (Double(target)-result)
-            score += pow(error, 2.0)
+            var error = 1.0
+            if target == targetNumber {
+                if (result > 0){
+                    error = 0.0
+                }
+            }else{
+                if (result < 0){
+                    error = 0.0
+                }
+            }
+            score += error
         })
         return score
     }
 }
 
-var nt = NumbersTrainer()
+
 
 func CSVNumbersDataParseLine(line: [String]) -> (Int, [Double]) {
     let dd = line[1..<line.count].map { b in
@@ -114,23 +91,36 @@ func CSVNumbersDataParseLine(line: [String]) -> (Int, [Double]) {
     let r = (Int(line[0])!, dd)
     return r
 }
-nt.train = lines.map(CSVNumbersDataParseLine)
 
+let trainSet = lines.map(CSVNumbersDataParseLine)
+var trainers = [NumbersTrainer]()
 
+for i in 0..<10{
+    let trainer = NumbersTrainer(train: trainSet, targetNumber: i)
+    trainers.append(trainer)
+}
 
-var run = GPRun(functions: functionArray, leafs: leafs, trainer: nt, initialDepth: 8, numberOfGenerations: 10, tournamentSize : 10)
-run.start()
+var runs = trainers.map { trainer in
+    
+    return GPRun(functions: functionArray, leafs: leafs, trainer: trainer, initialDepth: 5, numberOfGenerations: 5, tournamentSize : 9)
+}
+let best = runs.map { run -> IndividualProgram in
+    
+    var run = run
+    run.start()
+    let best = run.currentGeneration?[0]
+    return best!
+}
 
-let best = run.currentGeneration?[0]
 
 //test
 let testingCSV = readFile(path: "/Users/dyashkir/ios/GPSwift/mnist_test_10.csv")
 
-var linesT = trainingCSV.components(separatedBy: "\n").map( { a in
+var linesT = testingCSV.components(separatedBy: "\n").map( { a in
     return a.components(separatedBy: ",")
 })
 
-linesT = Array(lines[0..<(lines.count-1)])
+linesT = Array(linesT[0..<(linesT.count-1)])
 let test = linesT.map(CSVNumbersDataParseLine)
 
 var testScore = 0.0
@@ -140,46 +130,28 @@ for t in test {
         leafs[i].value = t.1[i]
     }
     
-    let res = run.evalProgram(root: (best?.prg)!)
-   
-    if(abs(Double(t.0) - res) < 0.5){
+    let results = best.map { prg -> Double in
+        let res = runs[0].evalProgram(root: (prg.prg))
+        return res
+    }
+  
+    var maxVal = 0.0
+    var index = -1
+    NSLog("Number is: \(t.0)")
+    for i in 0..<results.count{
+        if results[i] > maxVal {
+            NSLog("\(results[i]) \(i)")
+            maxVal = results[i]
+            index = i
+        }
+    }
+    
+    NSLog("Expected: \(t.0) selected: \(index)")
+    let res = index
+    if t.0 == index {
         testScore += 1.0
     }
-    NSLog("Expected: \(t.0) result: \(res)")
 }
-
+NSLog("Test ran: \(test.count)")
+testScore = testScore/Double(test.count)
 NSLog("Test Score: \(testScore)")
-
-//NSLog("\(nt.train)")
-/*
-let sq = SquareTrainer()
-let ct = CubeTrainer()
-
-var run = GPRun(functions: functionArray, leafs: leafs, trainer: sq, initialDepth: 4, numberOfGenerations: 10)
-run.start()
-
-let maxPrg = run.currentGeneration?[0]
-
-NSLog("Best for square is:")
-
-NSLog(String(describing: maxPrg))
-sq.train.forEach {a in
-    leafs[0].value = a.0
-    let res = run.evalProgram(root: (maxPrg?.prg)!)
-    NSLog("x: \(a.0) result: \(res)")
-}
-
-var runCube = GPRun(functions: functionArray, leafs: leafs, trainer: ct, initialDepth: 4, numberOfGenerations: 10)
-runCube.start()
-
-let maxPrgCt = runCube.currentGeneration?[0]
-
-NSLog("Best for Cube is:")
-
-NSLog(String(describing: maxPrgCt))
-ct.train.forEach {a in
-    leafs[0].value = a.0
-    let res = runCube.evalProgram(root: (maxPrgCt?.prg)!)
-    NSLog("x: \(a.0) result: \(res) expected: \(a.1)")
-}
-*/

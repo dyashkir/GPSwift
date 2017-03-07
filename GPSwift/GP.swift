@@ -64,7 +64,7 @@ struct GPRun {
     
     let initialTreeDepth : Int
     let numberOfGenerations : Int
-    let generationSize : Int = 300
+    let generationSize : Int = 50
     let mutationRate = 0.05
     let crossoverRate = 0.94
     let tournamentSize : Int
