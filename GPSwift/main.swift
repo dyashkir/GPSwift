@@ -23,9 +23,9 @@ func readFile(path: String) -> String {
 
 var functionArray = [GPFunction]()
 
-functionArray.append((+, "+"))
-functionArray.append((-, "-"))
-functionArray.append((*,"*"))
+functionArray.append( .twoArg(f : +, name : "+"))
+functionArray.append(.twoArg(f : -, name : "-"))
+functionArray.append(.twoArg(f : *, name : "*"))
 func division(a:Double, b:Double) ->Double {
     if b != 0.0 {
         return a/b
@@ -33,7 +33,17 @@ func division(a:Double, b:Double) ->Double {
         return a
     }
 }
-functionArray.append((division, "/"))
+functionArray.append(.twoArg(f : division, name : "/"))
+
+func if_func(condition : Double, negative : Double, positive: Double) -> Double{
+    if (condition < 0.0){
+        return negative
+    }else{
+        return positive
+    }
+}
+
+functionArray.append(.threeArg(f : if_func, name : "if"))
 
 var leafs = [Leaf]()
 
@@ -105,11 +115,11 @@ for i in 0..<10{
 var runs = trainers.map { trainer -> GPRun in
     
     let runConfig = RunConfiguration( initialTreeDepth: 5,
-                                      numberOfGenerations: 5,
+                                      numberOfGenerations: 20,
                                       generationSize: 1000,
                                       mutationRate: 0.01,
                                       crossoverRate: 0.91,
-                                      tournamentSize : 9)
+                                      tournamentSize : 3)
     
     return GPRun(functions: functionArray, leafs: leafs, trainer: trainer, config: runConfig)
 }

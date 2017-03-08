@@ -8,15 +8,14 @@
 
 import Foundation
 
-enum NodeType{
-    case twoVal
-    case oneVal
-    case leaf
-    case constant
-}
 
 typealias ProgramTreeNode = TreeNode<NodeFunction>
-typealias GPFunction = (function : (Double, Double)->Double, name: String)
+enum GPFunction {
+    case twoArg(f : (Double, Double)->Double, name: String)
+    case threeArg(f : (Double, Double, Double)->Double, name: String)
+}
+//typealias GPFunction = (function : (Double, Double)->Double, name: String)
+
 class Leaf {
     var value : Double = 0.0
 }
@@ -28,26 +27,29 @@ struct IndividualProgram {
         return self
     }
 }
-struct NodeFunction{
-    var type : NodeType
-    var f : GPFunction?
-    var leaf : Leaf?
-    var constant : Double?
-    var name : String?
-    init(type : NodeType) {
-        self.type = type
-    }
-    
+
+enum NodeFunction {
+    case leaf(Leaf)
+    case f(GPFunction)
+    case constant(Double)
 }
+
 extension NodeFunction: CustomStringConvertible {
-     
-    var description: String {
-        if(type == .leaf){
-           return "leaf"
-        }else if (type == .constant){
-            return "\(self.constant!)"
-        }else{
-            return (self.f!.name)
+    
+    var description : String {
+        switch self {
+        case .leaf(_):
+            return "leaf"
+        case .constant(let constant):
+            return "\(constant)"
+        case .f(let gpFunction):
+            switch gpFunction {
+            case .twoArg(_, let name):
+                return name
+            case .threeArg(_, let name):
+                return name
+            }
+            
         }
     }
 }
@@ -67,7 +69,7 @@ struct RunConfiguration {
 
 struct GPRun {
     
-    let functionArray : [(function: (Double, Double)->Double, name: String)]
+    let functionArray : [GPFunction]
     let leafs: [Leaf]
     let trainer : GPTrainer
     
@@ -76,7 +78,7 @@ struct GPRun {
     var currentGeneration : ([IndividualProgram])?
 
 
-    init(functions: [(function: (Double, Double)->Double, name: String)],
+    init(functions: [GPFunction],
          leafs: [Leaf],
          trainer: GPTrainer,
          config: RunConfiguration
@@ -88,52 +90,95 @@ struct GPRun {
         
         self.config = config
     }
+   
+    private func makeConstant()->Double {
+        return Double((arc4random_uniform(UInt32(100))))/100.0
+    }
+    private func getRandomLeaf()-> Leaf {
+        let i = Int( (arc4random_uniform(UInt32(leafs.count))))
+        return leafs[i]
+    }
+    private func getRandomTwoArgFunc() -> GPFunction {
+        let funcs = self.functionArray.filter { f in
+            switch f{
+            case .threeArg:
+                return false
+            case .twoArg:
+                return true
+            }
+        }
+        
+        let i = Int( (arc4random_uniform(UInt32(funcs.count))))
+        return funcs[i]
+    }
+    private func getRandomThreeArgFunc() -> GPFunction {
+        let funcs = self.functionArray.filter { f in
+            switch f{
+            case .threeArg:
+                return true
+            case .twoArg:
+                return false
+            }
+        }
+        
+        let i = Int( (arc4random_uniform(UInt32(funcs.count))))
+        return funcs[i]
+    }
     
     func makeProgram(depth: Int)-> TreeNode<NodeFunction>{
         if(depth == 1){
             if (Int(arc4random_uniform(UInt32(2))) == 0){
-                var body = NodeFunction(type: .constant)
-                body.constant = Double((arc4random_uniform(UInt32(100))))/100.0
+                let body = NodeFunction.constant(self.makeConstant())
                 let t = TreeNode<NodeFunction>(value: body)
                 return t
             }else{
-                var body = NodeFunction(type: .leaf)
-                let i = Int( (arc4random_uniform(UInt32(leafs.count))))
-                body.leaf = leafs[i]
-                let t = TreeNode<NodeFunction>(value: body)
-                return t    
+                let t = TreeNode<NodeFunction>(value: NodeFunction.leaf(self.getRandomLeaf()))
+                return t
             }
             
         }
         
-        var rootFunc = NodeFunction(type: .twoVal)
         
         let f1 = makeProgram(depth: depth-1)
         let f2 = makeProgram(depth: depth-1)
         
         let i = Int( (arc4random_uniform(UInt32(functionArray.count))))
-        rootFunc.f = functionArray[i]
+        let selectedFunction = self.functionArray[i]
+        
+        let rootFunc = NodeFunction.f(selectedFunction)
+        
         
         let root = TreeNode<NodeFunction>(value: rootFunc)
         root.add(f1)
         root.add(f2)
+        
+        switch selectedFunction {
+        case .twoArg: break
+        case .threeArg:
+            let f3 = makeProgram(depth: depth-1)
+            root.add(f3)
+        }
+        
+        
         return root
     }
     
     func evalProgram(root : ProgramTreeNode)->Double{
-        if root.value.type == .leaf {
-            return root.value.leaf!.value
-        }else if root.value.type == .oneVal{
-            let v1 = evalProgram(root: root.children[0])
-            
-            return root.value.f!.function(v1, v1)
-        }else if root.value.type == .constant {
-            return root.value.constant!
-        }else{
+        switch root.value {
+        case .leaf(let leaf):
+            return leaf.value
+        case .constant(let constant):
+            return constant
+        case .f(let function):
             let v1 = evalProgram(root: root.children[0])
             let v2 = evalProgram(root: root.children[1])
-            
-            return root.value.f!.function(v1, v2)
+            switch function {
+            case .twoArg(let f,_):
+                return f(v1, v2)
+            case .threeArg(let f, _):
+                let v3 = evalProgram(root: root.children[2])
+                return f(v1, v2, v3)
+            }
         }
     }
     
@@ -182,7 +227,11 @@ struct GPRun {
                     p2 = tournamentSelection()
                 }
                 let parent2 = currentGeneration[p2]
-                newGeneration.append(self.crossover(parents: (parent1, parent2)))
+                var new = self.crossover(parents: (parent1, parent2))
+                while new == nil {
+                    new = self.crossover(parents: (parent1, parent2))
+                }
+                newGeneration.append(new!)
             }
             
             currentGeneration = newGeneration
@@ -222,14 +271,27 @@ struct GPRun {
             let decision = Int( (arc4random_uniform(UInt32(2))))
             next = next.children[decision]
         }
-        let i = Int( (arc4random_uniform(UInt32(functionArray.count))))
-        next.value.f = functionArray[i]
+       
+        
+        switch next.value {
+        case .constant(_):
+            next.value = NodeFunction.constant(self.makeConstant())
+        case .leaf(_):
+            next.value = NodeFunction.leaf(self.getRandomLeaf())
+        case .f(let f):
+            switch f {
+            case .twoArg:
+                next.value = NodeFunction.f(self.getRandomTwoArgFunc())
+            case .threeArg:
+                next.value = NodeFunction.f(self.getRandomThreeArgFunc())
+            }
+        }
         
         let newProgram = IndividualProgram(prg: top, score:0.0)
         return newProgram
     }
     
-    func crossover(parents: (IndividualProgram, IndividualProgram)) -> IndividualProgram{
+    func crossover(parents: (IndividualProgram, IndividualProgram)) -> IndividualProgram?{
         let level = Int( (arc4random_uniform(UInt32(self.config.initialTreeDepth-2))))
         var next1 = parents.0.prg.replica()
         var next2 = parents.1.prg.replica()
@@ -245,9 +307,12 @@ struct GPRun {
             next2 = next2.children[decision]
         }
         
-        next1.children = next2.children
-        
-        let newProgram = IndividualProgram(prg: top, score:0.0)
+        var newProgram : IndividualProgram?
+        if next1.children.count == next2.children.count {
+            next1.children = next2.children
+            newProgram = IndividualProgram(prg: top, score:0.0)
+        }
         return newProgram
+        
     }
 }
