@@ -56,6 +56,7 @@ extension NodeFunction: CustomStringConvertible {
 
 protocol GPTrainer{
     func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode)->Double, leafs: [Leaf]) ->Double
+    func description() -> String
 }
 
 struct RunConfiguration {
@@ -210,7 +211,7 @@ struct GPRun {
             currentGeneration.sort(by: {a,b in
                 return a.score<b.score
             })
-            NSLog("Current gen best score: \(currentGeneration[0].score) worst: \(currentGeneration[currentGeneration.count-1].score)")
+            NSLog("Run \(trainer.description()) Current gen best score: \(currentGeneration[0].score) worst: \(currentGeneration[currentGeneration.count-1].score)")
             
             var newGeneration = ([IndividualProgram])()
             let filler = currentGeneration.prefix(upTo: currentGeneration.count-mutatedNumber-crossoverNumber)

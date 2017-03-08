@@ -47,7 +47,7 @@ functionArray.append(.threeArg(f : if_func, name : "if"))
 
 var leafs = [Leaf]()
 
-let trainingCSV = readFile(path: "/Users/dyashkir/ios/GPSwift/mnist_train_100.csv")
+let trainingCSV = readFile(path: "/Users/dyashkir/ios/GPSwift/train_test_data/mnist_train.csv")
 
 var lines = trainingCSV.components(separatedBy: "\n").map( { a in
     return a.components(separatedBy: ",")
@@ -64,6 +64,10 @@ struct NumbersTrainer : GPTrainer {
     var train : [(Int, [Double])]
     
     let targetNumber : Int
+    
+    func description() -> String {
+        return "\(targetNumber)"
+    }
     
     func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode) -> Double, leafs: [Leaf]) -> Double {
        var score = 0.0
@@ -116,10 +120,10 @@ var runs = trainers.map { trainer -> GPRun in
     
     let runConfig = RunConfiguration( initialTreeDepth: 5,
                                       numberOfGenerations: 20,
-                                      generationSize: 1000,
+                                      generationSize: 1100,
                                       mutationRate: 0.01,
-                                      crossoverRate: 0.91,
-                                      tournamentSize : 3)
+                                      crossoverRate: 0.98,
+                                      tournamentSize : 4)
     
     return GPRun(functions: functionArray, leafs: leafs, trainer: trainer, config: runConfig)
 }
