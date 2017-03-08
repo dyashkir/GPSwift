@@ -56,18 +56,22 @@ protocol GPTrainer{
     func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode)->Double, leafs: [Leaf]) ->Double
 }
 
+struct RunConfiguration {
+    let initialTreeDepth : Int
+    let numberOfGenerations : Int
+    let generationSize : Int
+    let mutationRate : Double
+    let crossoverRate : Double
+    let tournamentSize : Int
+}
+
 struct GPRun {
     
     let functionArray : [(function: (Double, Double)->Double, name: String)]
     let leafs: [Leaf]
     let trainer : GPTrainer
     
-    let initialTreeDepth : Int
-    let numberOfGenerations : Int
-    let generationSize : Int = 50
-    let mutationRate = 0.05
-    let crossoverRate = 0.94
-    let tournamentSize : Int
+    let config : RunConfiguration
     
     var currentGeneration : ([IndividualProgram])?
 
@@ -75,16 +79,14 @@ struct GPRun {
     init(functions: [(function: (Double, Double)->Double, name: String)],
          leafs: [Leaf],
          trainer: GPTrainer,
-         initialDepth : Int,
-         numberOfGenerations : Int,
-         tournamentSize : Int) {
+         config: RunConfiguration
+         ) {
         
         self.functionArray = functions
         self.leafs = leafs
         self.trainer = trainer
-        self.initialTreeDepth = initialDepth
-        self.numberOfGenerations = numberOfGenerations
-        self.tournamentSize = tournamentSize
+        
+        self.config = config
     }
     
     func makeProgram(depth: Int)-> TreeNode<NodeFunction>{
@@ -138,7 +140,7 @@ struct GPRun {
     func buildGeneration(size: Int)->[IndividualProgram]{
         var gen = [IndividualProgram]()
         for _ in 0..<size{
-            let p = IndividualProgram(prg: makeProgram(depth: self.initialTreeDepth), score: 1000.0)
+            let p = IndividualProgram(prg: makeProgram(depth: self.config.initialTreeDepth), score: 1000.0)
             gen.append(p)
         }
         return gen
@@ -146,16 +148,16 @@ struct GPRun {
     
     mutating func start(){
         
-        self.currentGeneration = self.buildGeneration(size: self.generationSize)
+        self.currentGeneration = self.buildGeneration(size: self.config.generationSize)
         
         guard var currentGeneration = self.currentGeneration else{
             fatalError()
         }
         
-        let mutatedNumber = Int(Double(generationSize)*mutationRate)
-        let crossoverNumber = Int(Double(generationSize)*crossoverRate)
+        let mutatedNumber = Int(Double(self.config.generationSize)*self.config.mutationRate)
+        let crossoverNumber = Int(Double(self.config.generationSize)*self.config.crossoverRate)
         
-        for _ in 0..<self.numberOfGenerations {
+        for _ in 0..<self.config.numberOfGenerations {
             for i in 0..<currentGeneration.count {
                 currentGeneration[i].score = trainer.fitness(forProgram: currentGeneration[i].prg, eval: self.evalProgram, leafs: leafs)
             }
@@ -169,13 +171,13 @@ struct GPRun {
             let filler = currentGeneration.prefix(upTo: currentGeneration.count-mutatedNumber-crossoverNumber)
             newGeneration.append(contentsOf: filler)
             for _ in 0..<mutatedNumber{
-                let prgToMutate = Int((arc4random_uniform(UInt32(generationSize/2))))
+                let prgToMutate = Int((arc4random_uniform(UInt32(self.config.generationSize/2))))
                 newGeneration.append(self.mutate(prg: currentGeneration[prgToMutate]))
             }
             
             for i in 0..<crossoverNumber{
                 let parent1 = currentGeneration[self.tournamentSelection()]
-                var p2 = Int((arc4random_uniform(UInt32(generationSize/2))))
+                var p2 = Int((arc4random_uniform(UInt32(self.config.generationSize/2))))
                 while p2 == i{
                     p2 = tournamentSelection()
                 }
@@ -199,8 +201,8 @@ struct GPRun {
     
     func tournamentSelection()->Int{
         var winner : Int?
-        for _ in 0..<tournamentSize {
-            let cur = Int((arc4random_uniform(UInt32(generationSize-1))))
+        for _ in 0..<self.config.tournamentSize {
+            let cur = Int((arc4random_uniform(UInt32(self.config.generationSize-1))))
             if let w = winner {
                 if currentGeneration![cur].score < currentGeneration![w].score {
                     winner = cur
@@ -213,7 +215,7 @@ struct GPRun {
     }
     
     func mutate(prg: IndividualProgram) -> IndividualProgram{
-        let level = Int( (arc4random_uniform(UInt32(self.initialTreeDepth-2))))
+        let level = Int( (arc4random_uniform(UInt32(self.config.initialTreeDepth-2))))
         var next = prg.prg.replica()
         let top = next
         for _ in 0..<level{
@@ -228,7 +230,7 @@ struct GPRun {
     }
     
     func crossover(parents: (IndividualProgram, IndividualProgram)) -> IndividualProgram{
-        let level = Int( (arc4random_uniform(UInt32(self.initialTreeDepth-2))))
+        let level = Int( (arc4random_uniform(UInt32(self.config.initialTreeDepth-2))))
         var next1 = parents.0.prg.replica()
         var next2 = parents.1.prg.replica()
         let top = next1

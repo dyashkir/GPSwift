@@ -34,8 +34,6 @@ func division(a:Double, b:Double) ->Double {
     }
 }
 functionArray.append((division, "/"))
-//functionArray.append((min, "min"))
-//functionArray.append((max, "max"))
 
 var leafs = [Leaf]()
 
@@ -66,14 +64,18 @@ struct NumbersTrainer : GPTrainer {
             }
             
             let result = eval(forProgram)
-            var error = 1.0
+            var error = 0.0
             if target == targetNumber {
                 if (result > 0){
                     error = 0.0
+                }else{
+                    error = 5.0
                 }
             }else{
                 if (result < 0){
                     error = 0.0
+                }else{
+                    error = 1.0
                 }
             }
             score += error
@@ -100,10 +102,18 @@ for i in 0..<10{
     trainers.append(trainer)
 }
 
-var runs = trainers.map { trainer in
+var runs = trainers.map { trainer -> GPRun in
     
-    return GPRun(functions: functionArray, leafs: leafs, trainer: trainer, initialDepth: 5, numberOfGenerations: 5, tournamentSize : 9)
+    let runConfig = RunConfiguration( initialTreeDepth: 5,
+                                      numberOfGenerations: 5,
+                                      generationSize: 1000,
+                                      mutationRate: 0.01,
+                                      crossoverRate: 0.91,
+                                      tournamentSize : 9)
+    
+    return GPRun(functions: functionArray, leafs: leafs, trainer: trainer, config: runConfig)
 }
+
 let best = runs.map { run -> IndividualProgram in
     
     var run = run
