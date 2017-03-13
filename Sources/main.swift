@@ -118,16 +118,16 @@ for i in 0..<10{
 
 var runs = trainers.map { trainer -> GPRun in
     
-    let runConfig = RunConfiguration( initialTreeDepth: 5,
+    let runConfig = RunConfiguration( initialTreeDepth: 10,
                                       numberOfGenerations: 20,
-                                      generationSize: 1100,
+                                      generationSize: 100,
                                       mutationRate: 0.01,
                                       crossoverRate: 0.98,
-                                      tournamentSize : 4)
+                                      tournamentSize : 2)
     
     return GPRun(functions: functionArray, leafs: leafs, trainer: trainer, config: runConfig)
 }
-
+NSLog("Starting runs")
 let best = runs.map { run -> IndividualProgram in
     
     var run = run
