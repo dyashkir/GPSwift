@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Surge
 
 //data
 
@@ -24,9 +25,12 @@ func readFile(path: String) -> String {
 var functionArray = [GPFunction]()
 
 functionArray.append( .twoArg(f : +, name : "+"))
-functionArray.append(.twoArg(f : -, name : "-"))
+
+
 functionArray.append(.twoArg(f : *, name : "*"))
-func division(a:Double, b:Double) ->Double {
+
+
+/*func division(a:Double, b:Double) ->Double {
     if b != 0.0 {
         return a/b
     }else{
@@ -44,10 +48,10 @@ func if_func(condition : Double, negative : Double, positive: Double) -> Double{
 }
 
 functionArray.append(.threeArg(f : if_func, name : "if"))
-
+*/
 var leafs = [Leaf]()
 
-let trainingCSV = readFile(path: "/Users/dyashkir/ios/GPSwift/train_test_data/mnist_train.csv")
+let trainingCSV = readFile(path: "/Users/dyashkir/ios/GPSwift/train_test_data/mnist_train_100.csv")
 
 var lines = trainingCSV.components(separatedBy: "\n").map( { a in
     return a.components(separatedBy: ",")
@@ -56,12 +60,13 @@ var lines = trainingCSV.components(separatedBy: "\n").map( { a in
 lines = Array(lines[0..<(lines.count-1)])
 
 for i in 0..<lines[0].count-1 {
-    leafs.append(Leaf())
+    leafs.append(Leaf(value: Array<Double>()))
 }
 
 struct NumbersTrainer : GPTrainer {
    
-    var train : [(Int, [Double])]
+    var target : [Double]
+    var inputs : [[Double]]
     
     let targetNumber : Int
     
@@ -69,31 +74,52 @@ struct NumbersTrainer : GPTrainer {
         return "\(targetNumber)"
     }
     
-    func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode) -> Double, leafs: [Leaf]) -> Double {
-       var score = 0.0
-        train.forEach({ t in
-            let target = t.0
-            for i in 0..<t.1.count {
-                leafs[i].value = t.1[i]
+    init(_ inputSet : [(Int, [Double])], targetNumber : Int) {
+        
+        self.targetNumber = targetNumber
+        
+        self.target = inputSet.map { i in
+            return Double(i.0)
+        }
+        
+        let trainingSetSize = inputSet.count
+        let dataSize = inputSet[0].1.count
+        
+        var data = [[Double]]()
+        for i in 0..<dataSize {
+            var inp = [Double](repeating: 0.0, count: trainingSetSize)
+            for j in 0..<trainingSetSize{
+               inp[j] = inputSet[j].1[i]
             }
-            
-            let result = eval(forProgram)
-            var error = 0.0
-            if target == targetNumber {
-                if (result > 0){
-                    error = 0.0
-                }else{
-                    error = 5.0
+            data.append(inp)
+        }
+        self.inputs = data
+    }
+    
+    func dataCount() -> Int {
+        return target.count
+    }
+    
+    func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode) -> [Double], leafs: [Leaf]) -> Double {
+        
+        let result = eval(forProgram)
+        
+        for i in 0..<leafs.count{
+            leafs[i].value = inputs[i]
+        }
+        
+        var score = 0.0
+        for i in 0..<result.count{
+            if target[i] == Double(targetNumber){
+                if (result[i] < 0){
+                    score += 5.0
                 }
             }else{
-                if (result < 0){
-                    error = 0.0
-                }else{
-                    error = 1.0
+                if (result[i] > 0){
+                    score += 1.0
                 }
             }
-            score += error
-        })
+        }
         return score
     }
 }
@@ -112,7 +138,7 @@ let trainSet = lines.map(CSVNumbersDataParseLine)
 var trainers = [NumbersTrainer]()
 
 for i in 0..<10{
-    let trainer = NumbersTrainer(train: trainSet, targetNumber: i)
+    let trainer = NumbersTrainer(trainSet, targetNumber: i)
     trainers.append(trainer)
 }
 
@@ -120,7 +146,7 @@ var runs = trainers.map { trainer -> GPRun in
     
     let runConfig = RunConfiguration( initialTreeDepth: 10,
                                       numberOfGenerations: 20,
-                                      generationSize: 100,
+                                      generationSize: 1000,
                                       mutationRate: 0.01,
                                       crossoverRate: 0.98,
                                       tournamentSize : 2)
@@ -151,10 +177,10 @@ var testScore = 0.0
 for t in test {
     let target = t.0
     for i in 0..<t.1.count {
-        leafs[i].value = t.1[i]
+        leafs[i].value = [t.1[i]]
     }
     
-    let results = best.map { prg -> Double in
+    let results = best.map { prg -> [Double] in
         let res = runs[0].evalProgram(root: (prg.prg))
         return res
     }
@@ -162,13 +188,13 @@ for t in test {
     var maxVal = 0.0
     var index = -1
     NSLog("Number is: \(t.0)")
-    for i in 0..<results.count{
+    /*for i in 0..<results.count{
         if results[i] > maxVal {
             NSLog("\(results[i]) \(i)")
             maxVal = results[i]
             index = i
         }
-    }
+    }*/
     
     NSLog("Expected: \(t.0) selected: \(index)")
     let res = index

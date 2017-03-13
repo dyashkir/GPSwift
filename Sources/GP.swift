@@ -7,17 +7,20 @@
 //
 
 import Foundation
+import Surge
 
 
 typealias ProgramTreeNode = TreeNode<NodeFunction>
 enum GPFunction {
-    case twoArg(f : (Double, Double)->Double, name: String)
-    case threeArg(f : (Double, Double, Double)->Double, name: String)
+    case twoArg(f : ([Double], [Double])->[Double], name: String)
+    case threeArg(f : ([Double], [Double], [Double])->[Double], name: String)
 }
-//typealias GPFunction = (function : (Double, Double)->Double, name: String)
 
 class Leaf {
-    var value : Double = 0.0
+    var value : [Double]
+    init(value : [Double]){
+        self.value = value
+    }
 }
 struct IndividualProgram {
     let prg : ProgramTreeNode
@@ -31,7 +34,7 @@ struct IndividualProgram {
 enum NodeFunction {
     case leaf(Leaf)
     case f(GPFunction)
-    case constant(Double)
+    case constant([Double])
 }
 
 extension NodeFunction: CustomStringConvertible {
@@ -55,8 +58,9 @@ extension NodeFunction: CustomStringConvertible {
 }
 
 protocol GPTrainer{
-    func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode)->Double, leafs: [Leaf]) ->Double
+    func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode)->[Double], leafs: [Leaf]) ->Double
     func description() -> String
+    func dataCount() -> Int
 }
 
 struct RunConfiguration {
@@ -77,8 +81,7 @@ struct GPRun {
     let config : RunConfiguration
     
     var currentGeneration : ([IndividualProgram])?
-
-
+    
     init(functions: [GPFunction],
          leafs: [Leaf],
          trainer: GPTrainer,
@@ -92,8 +95,9 @@ struct GPRun {
         self.config = config
     }
    
-    private func makeConstant()->Double {
-        return Double((arc4random_uniform(UInt32(100))))/100.0
+    private func makeConstant()->[Double] {
+        let val  = Double((arc4random_uniform(UInt32(100))))/100.0
+        return Array<Double>(repeating: val, count: self.trainer.dataCount() )
     }
     private func getRandomLeaf()-> Leaf {
         let i = Int( (arc4random_uniform(UInt32(leafs.count))))
@@ -164,7 +168,7 @@ struct GPRun {
         return root
     }
     
-    func evalProgram(root : ProgramTreeNode)->Double{
+    func evalProgram(root : ProgramTreeNode)->[Double]{
         switch root.value {
         case .leaf(let leaf):
             return leaf.value
