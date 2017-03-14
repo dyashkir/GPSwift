@@ -28,6 +28,7 @@ functionArray.append( .twoArg(f : +, name : "+"))
 
 
 functionArray.append(.twoArg(f : *, name : "*"))
+functionArray.append(.twoArg(f : -, name : "-"))
 
 
 /*func division(a:Double, b:Double) ->Double {
@@ -101,26 +102,28 @@ struct NumbersTrainer : GPTrainer {
     }
     
     func fitness(forProgram: ProgramTreeNode, eval: (ProgramTreeNode) -> [Double], leafs: [Leaf]) -> Double {
-        
-        let result = eval(forProgram)
-        
+       
         for i in 0..<leafs.count{
             leafs[i].value = inputs[i]
         }
         
-        var score = 0.0
+        let result = eval(forProgram)
+        
+        var error = 0.0
         for i in 0..<result.count{
+            
             if target[i] == Double(targetNumber){
-                if (result[i] < 0){
-                    score += 5.0
+                if (result[i] <= 0){
+                    error += 5.0
                 }
             }else{
-                if (result[i] > 0){
-                    score += 1.0
+                if (result[i] >= 0){
+                    error += 1.0
                 }
             }
         }
-        return score
+        
+        return error
     }
 }
 
@@ -144,7 +147,7 @@ for i in 0..<10{
 
 var runs = trainers.map { trainer -> GPRun in
     
-    let runConfig = RunConfiguration( initialTreeDepth: 10,
+    let runConfig = RunConfiguration( initialTreeDepth: 6,
                                       numberOfGenerations: 20,
                                       generationSize: 1000,
                                       mutationRate: 0.01,

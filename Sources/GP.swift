@@ -209,7 +209,7 @@ struct GPRun {
         
         for _ in 0..<self.config.numberOfGenerations {
             for i in 0..<currentGeneration.count {
-                NSLog("Eval \(i)")
+                //NSLog("Eval \(i)")
                 currentGeneration[i].score = trainer.fitness(forProgram: currentGeneration[i].prg, eval: self.evalProgram, leafs: leafs)
             }
             
