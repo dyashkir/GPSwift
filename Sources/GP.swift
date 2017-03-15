@@ -197,7 +197,7 @@ struct GPRun {
     }
     
     mutating func start(){
-        
+        NSLog("starting run \(trainer.description)")
         self.currentGeneration = self.buildGeneration(size: self.config.generationSize)
         
         guard var currentGeneration = self.currentGeneration else{

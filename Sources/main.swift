@@ -8,19 +8,9 @@
 
 import Foundation
 import Surge
+import CSV
 
 //data
-
-func readFile(path: String) -> String {
-    
-    do {
-        
-        let text = try String(contentsOfFile: path)
-        return text
-    }catch{
-        fatalError()
-    }
-}
 
 var functionArray = [GPFunction]()
 
@@ -51,16 +41,33 @@ func if_func(condition : Double, negative : Double, positive: Double) -> Double{
 functionArray.append(.threeArg(f : if_func, name : "if"))
 */
 var leafs = [Leaf]()
+let trainingFileName = "/Users/dyashkir/ios/GPSwift/train_test_data/mnist_train.csv"
+NSLog("Using training file \(trainingFileName)")
 
-let trainingCSV = readFile(path: "/Users/dyashkir/ios/GPSwift/train_test_data/mnist_train_100.csv")
+let trainingFile = InputStream(fileAtPath: trainingFileName)
 
-var lines = trainingCSV.components(separatedBy: "\n").map( { a in
-    return a.components(separatedBy: ",")
-})
+let csv = try! CSV(stream: trainingFile!)
 
-lines = Array(lines[0..<(lines.count-1)])
+var trainSet = [(Int, [Double])]()
+var c = 0
+for l in csv {
+    
+    if c%10000 == 0 {
+        NSLog("Line \(c)")   
+    }
+    c += 1
+    
+    if(l.count > 1){
+        let dd = l[1..<l.count].map { c in
+            return Double(c)!/255.0
+        }
+        let r = (Int(l[0])!, dd)
+        trainSet.append(r)
+    }
+}
 
-for i in 0..<lines[0].count-1 {
+
+for i in 0..<trainSet[0].1.count-1 {
     leafs.append(Leaf(value: Array<Double>()))
 }
 
@@ -129,25 +136,17 @@ struct NumbersTrainer : GPTrainer {
 
 
 
-func CSVNumbersDataParseLine(line: [String]) -> (Int, [Double]) {
-    let dd = line[1..<line.count].map { b in
-        return Double(b)!/255.0
-    }
-    let r = (Int(line[0])!, dd)
-    return r
-}
-
-let trainSet = lines.map(CSVNumbersDataParseLine)
 var trainers = [NumbersTrainer]()
 
 for i in 0..<10{
+    NSLog("Trainer \(i)")
     let trainer = NumbersTrainer(trainSet, targetNumber: i)
     trainers.append(trainer)
 }
 
 var runs = trainers.map { trainer -> GPRun in
     
-    let runConfig = RunConfiguration( initialTreeDepth: 6,
+    let runConfig = RunConfiguration( initialTreeDepth: 10,
                                       numberOfGenerations: 20,
                                       generationSize: 1000,
                                       mutationRate: 0.01,
@@ -167,13 +166,13 @@ let best = runs.map { run -> IndividualProgram in
 
 
 //test
-let testingCSV = readFile(path: "/Users/dyashkir/ios/GPSwift/mnist_test_10.csv")
+/*let testingCSV = readFile(path: "/Users/dyashkir/ios/GPSwift/mnist_test_10.csv")
 
 var linesT = testingCSV.components(separatedBy: "\n").map( { a in
     return a.components(separatedBy: ",")
 })
-
-linesT = Array(linesT[0..<(linesT.count-1)])
+*/
+/*linesT = Array(linesT[0..<(linesT.count-1)])
 let test = linesT.map(CSVNumbersDataParseLine)
 
 var testScore = 0.0
@@ -208,3 +207,4 @@ for t in test {
 NSLog("Test ran: \(test.count)")
 testScore = testScore/Double(test.count)
 NSLog("Test Score: \(testScore)")
+*/
